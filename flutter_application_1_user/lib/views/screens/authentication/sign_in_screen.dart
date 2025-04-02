@@ -245,9 +245,14 @@ class SignInScreen extends StatelessWidget {
                         // Google Sign In Button
                         SizedBox(
                           child: InkWell(
-                            onTap: () {
-                              // Add your Google sign in logic here
-                            },
+                            onTap:
+                                state is AuthLoading
+                                    ? null
+                                    : () {
+                                      context.read<AuthBloc>().add(
+                                        GoogleSignInRequested(),
+                                      );
+                                    },
                             child: Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
