@@ -1,9 +1,11 @@
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'dart:io';
 import 'auth_event.dart';
 import 'auth_state.dart';
 
@@ -41,18 +43,29 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         if (event.imageFile != null) {
           // Create a unique file name using timestamp
           final timestamp = DateTime.now().millisecondsSinceEpoch;
-          final ref = _storage.ref().child(
-            'user_images/${userCredential.user!.uid}_$timestamp.jpg',
-          );
+          final fileName = 'user_images/${userCredential.user!.uid}_$timestamp';
 
-          // Upload the file
-          final uploadTask = await ref.putFile(
-            event.imageFile!,
-            SettableMetadata(contentType: 'image/jpeg'),
-          );
+          // Upload for web
+          final ref = _storage.ref().child(fileName);
+          if (event.imageFile is File) {
+            // Handle mobile file upload
+            final uploadTask = await ref.putFile(
+              event.imageFile!,
+              SettableMetadata(contentType: 'image/jpeg'),
+            );
 
-          // Get download URL
-          if (uploadTask.state == TaskState.success) {
+            // Get download URL
+            if (uploadTask.state == TaskState.success) {
+              imageUrl = await ref.getDownloadURL();
+            }
+          } else {
+            // Upload for other platforms
+            final metadata = SettableMetadata(
+              contentType: 'image/jpeg',
+              customMetadata: {'picked-file-path': fileName},
+            );
+
+            await ref.putBlob(event.imageFile, metadata);
             imageUrl = await ref.getDownloadURL();
           }
         }
@@ -121,5 +134,20 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         emit(AuthError(e.toString()));
       }
     });
+  }
+
+  Future<String?> uploadImage(File imageFile) async {
+    try {
+      final String fileName =
+          'profile_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final Reference ref = _storage.ref().child('profile_images/$fileName');
+      final UploadTask uploadTask = ref.putFile(imageFile);
+      final TaskSnapshot snapshot = await uploadTask;
+      final String downloadUrl = await snapshot.ref.getDownloadURL();
+      return downloadUrl;
+    } catch (e) {
+      debugPrint('Error uploading image: $e');
+      return null;
+    }
   }
 }

@@ -6,7 +6,7 @@ class SignUpRequested extends AuthEvent {
   final String email;
   final String password;
   final Map<String, dynamic> userData;
-  final File? imageFile;
+  final File? imageFile; // Change from html.File to dart:io File
 
   SignUpRequested({
     required this.email,

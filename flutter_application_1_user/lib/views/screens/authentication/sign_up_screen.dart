@@ -1,11 +1,10 @@
-import 'dart:io';
 import 'package:flutter_application_1_user/bloc/auth/auth_bloc.dart';
 import 'package:flutter_application_1_user/bloc/auth/auth_event.dart';
 import 'package:flutter_application_1_user/bloc/auth/auth_state.dart';
 import 'package:flutter_application_1_user/views/screens/home_screen.dart';
 import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -27,15 +26,26 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _passwordController = TextEditingController();
   File? _imageFile;
   final ImagePicker _picker = ImagePicker();
+  String? _imageUrl;
 
-  Future<void> _pickImage() async {
-    final XFile? pickedFile = await _picker.pickImage(
-      source: ImageSource.gallery,
-    );
-    if (pickedFile != null) {
-      setState(() {
-        _imageFile = File(pickedFile.path);
-      });
+  Future<void> pickImage() async {
+    try {
+      final XFile? pickedFile = await _picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 85,
+      );
+
+      if (pickedFile != null) {
+        setState(() {
+          _imageFile = File(pickedFile.path);
+          _imageUrl = pickedFile.path;
+        });
+        // Add your image upload logic here
+      }
+    } catch (e) {
+      debugPrint('Error picking image: $e');
     }
   }
 
@@ -113,10 +123,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                   ),
                                 ),
                                 child:
-                                    _imageFile != null
+                                    _imageUrl != null
                                         ? ClipOval(
                                           child: Image.file(
-                                            _imageFile!,
+                                            File(_imageUrl!),
                                             width: 50,
                                             height: 50,
                                             fit: BoxFit.cover,
@@ -138,7 +148,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                     shape: BoxShape.circle,
                                   ),
                                   child: InkWell(
-                                    onTap: _pickImage,
+                                    onTap: pickImage,
                                     child: const Icon(
                                       Icons.add_a_photo,
                                       color: Colors.white,
@@ -455,14 +465,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                           return;
                                         }
 
-                                        context.read<AuthBloc>().add(
-                                          SignUpRequested(
-                                            email: _emailController.text,
-                                            password: _passwordController.text,
-                                            userData: userData,
-                                            imageFile: _imageFile,
-                                          ),
-                                        );
+                                        if (_imageFile is File) {
+                                          context.read<AuthBloc>().add(
+                                            SignUpRequested(
+                                              email: _emailController.text,
+                                              password:
+                                                  _passwordController.text,
+                                              userData: userData,
+                                              imageFile: _imageFile,
+                                            ),
+                                          );
+                                        }
                                       }
                                     },
                             style: ElevatedButton.styleFrom(

@@ -311,7 +311,7 @@ class _AdoptedDogsScreenState extends State<AdoptedDogsScreen> {
                 ),
               ],
             ),
-          )).toList(),
+          )),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(

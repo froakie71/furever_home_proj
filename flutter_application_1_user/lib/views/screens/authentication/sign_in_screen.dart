@@ -11,9 +11,9 @@ class SignInScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final _formKey = GlobalKey<FormState>();
-    final _emailController = TextEditingController();
-    final _passwordController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+    final emailController = TextEditingController();
+    final passwordController = TextEditingController();
 
     return BlocConsumer<AuthBloc, AuthState>(
       listener: (context, state) {
@@ -41,7 +41,7 @@ class SignInScreen extends StatelessWidget {
                     vertical: 24.0,
                   ),
                   child: Form(
-                    key: _formKey,
+                    key: formKey,
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -72,7 +72,7 @@ class SignInScreen extends StatelessWidget {
                         const SizedBox(height: 32), // Added top spacing
                         // Email TextField
                         TextFormField(
-                          controller: _emailController,
+                          controller: emailController,
                           decoration: InputDecoration(
                             labelText: 'Email',
                             filled: true,
@@ -111,7 +111,7 @@ class SignInScreen extends StatelessWidget {
                         const SizedBox(height: 10), // Increased spacing
                         // Password TextField
                         TextFormField(
-                          controller: _passwordController,
+                          controller: passwordController,
                           decoration: InputDecoration(
                             labelText: 'Password',
                             filled: true,
@@ -156,11 +156,11 @@ class SignInScreen extends StatelessWidget {
                                 state is AuthLoading
                                     ? null
                                     : () {
-                                      if (_formKey.currentState!.validate()) {
+                                      if (formKey.currentState!.validate()) {
                                         context.read<AuthBloc>().add(
                                           SignInRequested(
-                                            _emailController.text,
-                                            _passwordController.text,
+                                            emailController.text,
+                                            passwordController.text,
                                           ),
                                         );
                                       }
